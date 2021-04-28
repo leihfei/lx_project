@@ -1,0 +1,18 @@
+socket:
+  point: /gs-guide-websocket
+  topic: /topic
+  prefixes: /app
+spring:
+  datasource:
+    primary:
+      url: jdbc:mysql:///lx_db?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&autoReconnect=true&failOverReadOnly=false
+      username: root
+      password: root
+server:
+  port: 8080
+  servlet:
+    context-path: /lx
+  instance:
+    preferIpAddress: true
+patchcaExpire: 60
+module_expire: 600
