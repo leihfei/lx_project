@@ -5,15 +5,21 @@ import com.lnlr.common.annonation.ControllerLogAnontation;
 import com.lnlr.common.constains.LogConstants;
 import com.lnlr.common.entity.IdEntity;
 import com.lnlr.common.exception.ParamException;
+import com.lnlr.common.jpa.model.MatchModel;
+import com.lnlr.common.jpa.model.NgData;
+import com.lnlr.common.jpa.model.NgFilter;
+import com.lnlr.common.jpa.model.NgPager;
 import com.lnlr.common.response.FailedResponse;
 import com.lnlr.common.response.ObjectResponse;
 import com.lnlr.common.response.Response;
 import com.lnlr.common.response.SuccessResponse;
+import com.lnlr.pojo.dto.ExcelDownDTO;
 import com.lnlr.pojo.entity.SysRole;
 import com.lnlr.pojo.entity.SysUser;
 import com.lnlr.pojo.entity.SysUserRole;
 import com.lnlr.pojo.param.base.AuthorityParam;
 import com.lnlr.pojo.param.base.CheckPassParam;
+import com.lnlr.pojo.param.base.UserParam;
 import com.lnlr.service.RoleService;
 import com.lnlr.service.SysUserRoleService;
 import com.lnlr.service.UserService;
@@ -21,12 +27,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -151,5 +157,50 @@ public class SysUserController {
     public Response list() {
         return new ObjectResponse<>(userService.list());
     }
-    
+
+    @PostMapping(value = "/page")
+    @ApiOperation(value = "分页查询用户列表")
+    @ControllerLogAnontation(type = LogConstants.QUERY_STATUS, value = "分页查询用户列表", moduleName = "平台管理-用户")
+    @ApiImplicitParam(dataTypeClass = NgPager.class, paramType = "query")
+    public Response page(@RequestBody NgPager ngPager) {
+        NgData<Object> ngData = userService.page(ngPager);
+        return new ObjectResponse<>(ngData);
+    }
+    @PostMapping(value = "/create")
+    @ApiOperation(value = "新增用户")
+    @ControllerLogAnontation(type = LogConstants.CREATE_STATUS, value = "新增用户", moduleName = "平台管理-用户")
+    @ApiImplicitParam(dataTypeClass = UserParam.class, paramType = "query")
+    public Response create(@RequestBody UserParam param) {
+        return userService.create(param);
+    }
+
+    @PostMapping(value = "/update")
+    @ApiOperation(value = "更新用户")
+    @ControllerLogAnontation(type = LogConstants.UPDATE_STATUS, value = "更新用户", moduleName = "平台管理-用户")
+    @ApiImplicitParam(dataTypeClass = UserParam.class, paramType = "query")
+    public Response update(@RequestBody UserParam param) {
+        return userService.update(param);
+    }
+
+    @GetMapping(value = "/exportExcel")
+    @ApiOperation(value = "导出数据")
+    @ControllerLogAnontation(type = LogConstants.QUERY_STATUS, value = "导出数据", moduleName = "平台管理-学生")
+    @ApiImplicitParam(dataTypeClass = NgPager.class, paramType = "query")
+    public void exportExcel(@ModelAttribute ExcelDownDTO dto, HttpServletRequest request, HttpServletResponse servletResponse) {
+        NgPager ngPager = new NgPager();
+        ngPager.setRows(2000);
+        Map<String, NgFilter> filters = ngPager.getFilters();
+        if (filters == null) {
+            ngPager.setFilters(filters);
+        }
+        if (StringUtils.isNotEmpty(dto.getName())) {
+            filters.put("realName", new NgFilter(dto.getName(), MatchModel.CONTAINS));
+        }
+        if (StringUtils.isNotEmpty(dto.getNumber())) {
+            filters.put("tealphone", new NgFilter(dto.getNumber(), MatchModel.CONTAINS));
+        }
+        ngPager.setFilters(filters);
+        userService.exportExcel(ngPager, request, servletResponse);
+    }
+
 }

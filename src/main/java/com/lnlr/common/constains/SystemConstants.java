@@ -120,13 +120,9 @@ public class SystemConstants {
     public static final String DEFAULT_PASSWORD = "123456";
 
     /**
-     * 用户类型：老师
+     * 用户类型：管理员
      */
     public static final Integer USER_TYPE_TEACHER = 0;
 
-    /**
-     * 用户类型：学生
-     */
-    public static final Integer USER_TYPE_STUDENT = 1;
 
 }

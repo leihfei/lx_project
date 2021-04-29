@@ -22,21 +22,13 @@ public interface SysUserDAO extends BaseDAO<SysUser> {
      */
     SysUser findAllByUsername(String username);
 
+    SysUser findByTelphone(String telphone);
+
 
     List<SysUser> findAllByIdIn(Set<String> ids);
 
-    List<SysUser> findAllByUserInfoIdIn(Iterable<String> userInfoIds);
-
     void deleteByIdIn(Iterable<String> ids);
 
-    /**
-     * @param id 老师、学生id
-     * @return com.xzl.security.pojo.master.entity.SysUser
-     * @author leihfei
-     * @description 通过userInfoid查询数据
-     * @date 19:44:47 2019-04-15
-     */
-    SysUser findByUserInfoId(String id);
 
     /**
      * 通过用户类型查询

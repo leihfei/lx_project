@@ -36,7 +36,6 @@ public class ExecultsPathListener implements ServletContextListener {
         log.info("初始化listenter,加载请求过滤地址");
         List<SysDefaultFilter> all = sysExcludePathService.findAll();
         redisUtil.set(SystemConstants.DEFAULT_URL_CATCH, JsonUtils.list2Json(all), SystemConstants.DEFAULT_URL_CATCH_TIME);
-        // Spring初始化监听，并且开启线程 设置环境数据采集
     }
 
     @Override

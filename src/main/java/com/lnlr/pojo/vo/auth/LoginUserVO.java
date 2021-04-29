@@ -9,24 +9,16 @@ import lombok.Data;
  * @email:leihfein@gmail.com
  */
 @Data
-public class UserVO {
+public class LoginUserVO {
 
     private String id;
 
-    /**
-     * 系统登录用户名称
-     */
-    private String username;
 
     /**
      * 系统用户名称
      */
     private String realName;
 
-    /**
-     * 状态：1-正常，2-删除,0-冻结
-     */
-    private Integer status;
 
     /**
      * 用户类型：

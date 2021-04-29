@@ -351,7 +351,7 @@ public class RoleServiceImpl implements RoleService {
     public Response showAuth(IdEntity param) {
         BeanValidator.check(param);
         // 在用户中查询一次
-        SysUser user = userDAO.findByUserInfoId(param.getId());
+        SysUser user = userDAO.findById(param.getId()).orElse(null);
         if (user == null) {
             return new FailedResponse(ResponseEnum.WARN_CODE.getCode(), "用户信息不存在，无法授权!");
         }
@@ -516,7 +516,7 @@ public class RoleServiceImpl implements RoleService {
         if (CollectionUtils.isEmpty(param.getRoleIds())) {
             return new FailedResponse(ResponseEnum.WARN_CODE.getCode(), "参数异常，角色不能为空!");
         }
-        List<SysUser> users = userDAO.findAllByUserInfoIdIn(param.getUserIds());
+        List<SysUser> users = userDAO.findAllByIdIn(param.getUserIds());
         param.setUserIds(users.stream().map(e -> e.getId()).collect(Collectors.toSet()));
         // 对这些人再次授予一个权限
         List<SysUserRole> sysUserRoles = Lists.newArrayList();

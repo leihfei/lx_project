@@ -31,6 +31,12 @@ public class SysUser extends BaseEntity implements Serializable {
      */
     private String username;
 
+
+    /**
+     * 电话
+     */
+    private String telphone;
+
     /**
      * 系统用户名称
      */
@@ -52,14 +58,20 @@ public class SysUser extends BaseEntity implements Serializable {
     private Integer status;
 
     /**
-     * 用户类型： 0-老师，1-学生
+     * 用户类型： 0-技师，1-收银，2-其他
      */
     private Integer userType;
 
     /**
-     * 用户信息id
+     * 性别：0-男，1-女
      */
-    private String userInfoId;
+    private Integer sex;
+
+
+    /**
+     * 邮箱
+     */
+    private String email;
 
     /**
      * 头像资源文件id

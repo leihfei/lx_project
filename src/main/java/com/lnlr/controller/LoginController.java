@@ -13,7 +13,7 @@ import com.lnlr.pojo.entity.*;
 import com.lnlr.pojo.param.base.LoginParam;
 import com.lnlr.pojo.vo.auth.LoginResultVO;
 import com.lnlr.pojo.vo.auth.ModuleNgZorroTreeVO;
-import com.lnlr.pojo.vo.auth.UserVO;
+import com.lnlr.pojo.vo.auth.LoginUserVO;
 import com.lnlr.service.ModuleServices;
 import com.lnlr.service.PatchcaService;
 import com.lnlr.service.RoleService;
@@ -202,10 +202,10 @@ public class LoginController {
     private Response loginSuccess(SysUser user) {
         // 存入RequesHolder中
         RequestHolder.add(user);
-        UserVO userVO = CopyUtils.beanCopy(user, new UserVO());
+        LoginUserVO userVO = CopyUtils.beanCopy(user, new LoginUserVO());
         //todo设置头像资源
         // 返回jwt数据UserVO
-        LoginResultVO vo = new LoginResultVO(userVO, JwtUtils.createJWt(audience, userVO.getUsername(), String.valueOf(userVO.getId())));
+        LoginResultVO vo = new LoginResultVO(userVO, JwtUtils.createJWt(audience, userVO.getTelphone(), String.valueOf(userVO.getId())));
         // 获取一下菜单
         createModule(user.getId(), vo);
         List<String> roles = getRoleNames(user);

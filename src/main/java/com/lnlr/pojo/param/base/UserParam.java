@@ -1,36 +1,35 @@
-package com.lnlr.pojo.vo.auth;
+package com.lnlr.pojo.param.base;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.NotBlank;
+
+import javax.validation.constraints.NotNull;
 
 /**
- * @author:leihfei
- * @description 系统用户返回视图
- * @date:Create in 17:05 2018/9/6
- * @email:leihfein@gmail.com
+ * @author leihfei
+ * @date 2021-04-29
  */
 @Data
-public class UserVO {
-
+public class UserParam {
     private String id;
 
-    /**
-     * 系统登录用户名称
-     */
-    private String username;
 
     /**
      * 系统用户名称
      */
+    @NotBlank(message = "昵称不能为空")
     private String realName;
 
     /**
      * 状态：1-正常，2-删除,0-冻结
      */
+    @NotNull(message = "用户状态不能为空")
     private Integer status;
 
     /**
-     * 用户类型：
+     * 用户类型：0-管理员，1-其他
      */
+    @NotNull(message = "用户类型不能为空")
     private Integer userType;
 
     /**
@@ -41,11 +40,11 @@ public class UserVO {
     /**
      * 电话
      */
+    @NotBlank(message = "登录电话不能为空")
     private String telphone;
 
     /**
      * 邮箱
      */
     private String email;
-
 }

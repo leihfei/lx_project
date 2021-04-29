@@ -10,15 +10,16 @@ import com.lnlr.common.entity.HashPassword;
 import com.lnlr.common.entity.IdEntity;
 import com.lnlr.common.exception.ParamException;
 import com.lnlr.common.exception.WarnException;
+import com.lnlr.common.execl.ExcelUtils;
 import com.lnlr.common.jpa.enums.Operator;
 import com.lnlr.common.jpa.model.NgData;
 import com.lnlr.common.jpa.model.NgPager;
 import com.lnlr.common.jpa.model.SearchFilter;
 import com.lnlr.common.jpa.query.DynamicSpecifications;
-import com.lnlr.common.utils.BeanValidator;
-import com.lnlr.common.utils.IpUtils;
-import com.lnlr.common.utils.PassUtils;
-import com.lnlr.common.utils.RequestHolder;
+import com.lnlr.common.jpa.query.PageUtils;
+import com.lnlr.common.response.Response;
+import com.lnlr.common.response.SuccessResponse;
+import com.lnlr.common.utils.*;
 import com.lnlr.pojo.dao.SysRoleDAO;
 import com.lnlr.pojo.dao.SysUserDAO;
 import com.lnlr.pojo.dao.SysUserRoleDAO;
@@ -28,18 +29,27 @@ import com.lnlr.pojo.entity.SysUser;
 import com.lnlr.pojo.entity.SysUserRole;
 import com.lnlr.pojo.param.base.AuthorityParam;
 import com.lnlr.pojo.param.base.CheckPassParam;
+import com.lnlr.pojo.param.base.UserParam;
+import com.lnlr.pojo.vo.auth.LoginUserVO;
 import com.lnlr.pojo.vo.auth.UserVO;
 import com.lnlr.service.ModuleServices;
 import com.lnlr.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.lnlr.common.constains.SystemConstants.USER_TYPE_TEACHER;
 
 /**
  * @author:leihfei
@@ -66,6 +76,11 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private ModuleServices moduleService;
+
+    /**
+     * 默认用户角色
+     */
+    private static final String DEFAULT_ROLE = "402881906a579926016a581ca882087c";
 
     /**
      * 判读是否为超级管理员
@@ -110,13 +125,13 @@ public class UserServiceImpl implements UserService {
             throw new ParamException("用户信息异常，无法查询");
         }
         try {
-            user = userDAO.findAllByUsername(keyword);
+            user = userDAO.findByTelphone(keyword);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ParamException("用户数据异常，请联系管理员");
         }
         if (user != null) {
-            if (!user.getUsername().equals(keyword)) {
+            if (!user.getTelphone().equals(keyword)) {
                 return null;
             }
         }
@@ -139,7 +154,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @ServiceLogAnonation(type = LogConstants.QUERY_STATUS, value = "分页查询用户信息", moduleName = "用户管理")
     public NgData page(NgPager ngPager) {
-        return null;
+        // 1.查询试题数据
+        Collection<SearchFilter> searchFilters = PageUtils.buildSearchFilter(ngPager);
+        NgData<SysUser> ngData = new NgData<>(
+                userDAO.findAll(DynamicSpecifications.bySearchFilter(SysUser.class,
+                        searchFilters), PageUtils.buildPageRequest(ngPager, PageUtils.buildSort(ngPager))), ngPager);
+
+        NgData<UserVO> retuNg = CopyUtils.beanCopy(ngData, new NgData<>());
+        retuNg.setData(Lists.newArrayList());
+        ngData.getData().forEach(item -> {
+            UserVO vo = CopyUtils.beanCopy(item, new UserVO());
+            retuNg.getData().add(vo);
+        });
+        return retuNg;
     }
 
     @Override
@@ -292,14 +319,14 @@ public class UserServiceImpl implements UserService {
             throw new ParamException("用户id不能为空!");
         }
         SysUser userHolder = RequestHolder.currentUser();
-        if (entity.getId().equals("1")) {
+        if (entity.getId().equals("11111")) {
             throw new ParamException("管理员账号禁止重置密码!");
         }
-        if (!userHolder.getUserInfoId().equals("1")) {
+        if (!userHolder.getId().equals("11111")) {
             throw new ParamException("您不是管理员，无法重置密码!");
         }
         // 查询用户
-        SysUser sysUser = userDAO.findByUserInfoId(entity.getId());
+        SysUser sysUser = userDAO.findById(entity.getId()).orElse(null);
         if (sysUser == null) {
             throw new ParamException("用户数据为空，无法重置!");
         }
@@ -311,17 +338,6 @@ public class UserServiceImpl implements UserService {
         sysUser.setOperator(RequestHolder.currentUser().getRealName());
         sysUser.setOperatorIp(IpUtils.getIpAddr(RequestHolder.currentRequest()));
         userDAO.save(sysUser);
-    }
-
-
-    UserVO getUserVO(SysUser user) {
-        UserVO vo = new UserVO();
-        vo.setId(user.getId());
-        vo.setRealName(user.getRealName());
-        vo.setStatus(user.getStatus());
-        vo.setUserType(user.getUserType());
-        // todo 头像信息
-        return vo;
     }
 
 
@@ -348,4 +364,202 @@ public class UserServiceImpl implements UserService {
         return modules.stream().map(SysModule::getUrl).collect(Collectors.toSet());
     }
 
+    @Override
+    public Response create(UserParam param) {
+        BeanValidator.check(param);
+        if (StringUtils.isNotEmpty(param.getId())) {
+            throw new ParamException("新增数据不合法,id不为空");
+        }
+        // 检查参数是否正确
+        BeanValidator.check(param);
+        SysUser user = CopyUtils.beanCopy(param, new SysUser());
+        checkCreateParamAndSetValue(user, param);
+        user.setOperator(RequestHolder.currentUser().getRealName());
+        user.setOperatorIp(IpUtils.getIpAddr(RequestHolder.currentRequest()));
+        createLoginAccount(user);
+        return new SuccessResponse("用户新增成功！");
+    }
+
+    /**
+     * 校验参数，并设相关置数据到实体中
+     *
+     * @param user
+     * @param param
+     */
+    private void checkCreateParamAndSetValue(SysUser user, UserParam param) {
+
+        // 检查电话
+        if (StringUtils.isNotBlank(param.getTelphone())) {
+            String telphone = param.getTelphone().trim();
+            if (!PatternValidatorUtil.isMobile(telphone)) {
+                throw new WarnException("电话号码格式错误！");
+            }
+            user.setTelphone(telphone);
+        }
+        SysUser sysUser = userDAO.findByTelphone(user.getTelphone());
+        if (sysUser != null) {
+            throw new WarnException("电话号码已存在！");
+        }
+        /** 7.邮箱 */
+        if (StringUtils.isNotBlank(param.getEmail())) {
+            String email = param.getEmail().trim();
+            if (!PatternValidatorUtil.isEmail(email)) {
+                throw new WarnException("邮箱格式错误！");
+            }
+            user.setEmail(email);
+        }
+    }
+
+    /**
+     * 创建登录账号
+     *
+     * @param user
+     */
+    private void createLoginAccount(SysUser user) {
+        // 电话号码后六位作为默认密码
+        String number = user.getTelphone();
+        HashPassword hashPassword = PassUtils.encryptPassword(MD5Util.md5Hash(number.substring(number.length() - 6)));
+        // 3.密码
+        user.setPassword(hashPassword.getPassword());
+        // 4.盐值
+        user.setSalt(hashPassword.getSalt());
+        // 5.状态
+        user.setStatus(0);
+        // 6.用户类型
+        user.setUserType(USER_TYPE_TEACHER);
+        // 8.头像id
+        user.setPhoto(user.getPhoto());
+        // 9.用户信息id
+        SysUser sysUser = userDAO.save(user);
+
+        /** 二、将账号与默认角色关联 */
+        SysUserRole userRole = new SysUserRole();
+        userRole.setRoleId(DEFAULT_ROLE);
+        userRole.setUserId(sysUser.getId());
+        userRole.setOperator(sysUser.getOperator());
+        userRole.setOperatorIp(sysUser.getOperatorIp());
+        userRoleDAO.save(userRole);
+    }
+
+    @Override
+    public Response update(UserParam param) {
+        // 查询原始数据是否异常
+        if (StringUtils.isEmpty(param.getId())) {
+            throw new ParamException("更新数据异常，检查ID");
+        }
+        // 检查参数是否正确
+        BeanValidator.check(param);
+        SysUser before = userDAO.findById(param.getId()).orElse(null);
+        Preconditions.checkNotNull(before, "原始数据异常，无法更新!");
+        SysUser newUser = CopyUtils.beanCopy(before, new SysUser());
+        return doUpdate(newUser, param);
+    }
+
+    /**
+     * 执行更新操作
+     *
+     * @param befor
+     * @param param
+     * @return
+     */
+    private Response doUpdate(SysUser befor, UserParam param) {
+        // 1.校验参数是否正确,并设置值到实体中 1
+        checkUpdateParamAndSetValue(befor, param);
+        // 3.执行更新操作
+        userDAO.save(befor);
+        return new SuccessResponse("更新成功");
+    }
+
+    /**
+     * 校验参数是否正确,并设置值到实体中
+     *
+     * @param before
+     * @param param
+     */
+    private void checkUpdateParamAndSetValue(SysUser before, UserParam param) {
+        /** 1.姓名 */
+        before.setRealName(param.getRealName().trim());
+
+        /** 2.工号 */
+        String number = param.getTelphone().trim();
+        SysUser sysUser = userDAO.findByTelphone(before.getTelphone());
+        if (sysUser != null
+                && !param.getId().equals(sysUser.getId())) {
+            throw new WarnException(sysUser.getUsername() + "电话号码已存在！");
+        }
+        before.setTelphone(number);
+
+        /** 6.电话 */
+        if (StringUtils.isNotBlank(param.getTelphone())) {
+            String telphone = param.getTelphone().trim();
+            if (!PatternValidatorUtil.isMobile(telphone)) {
+                throw new WarnException("电话号码格式错误！");
+            }
+            before.setTelphone(telphone);
+        }
+
+        /** 7.邮箱 */
+        if (StringUtils.isNotBlank(param.getEmail())) {
+            String email = param.getEmail().trim();
+            if (!PatternValidatorUtil.isEmail(email)) {
+                throw new WarnException("邮箱格式错误！");
+            }
+            before.setEmail(email);
+        }
+        // 头像
+        before.setEmail(param.getEmail());
+        before.setSex(param.getSex());
+        before.setUserType(param.getUserType());
+    }
+    /**
+     * 学生导入导出的额Excel表头
+     */
+    private static final String EXCEL_TABLE_HEADS =
+            "序号-姓名-微信ID-性别-电话-邮箱";
+    @Override
+    public void exportExcel(NgPager ngPager, HttpServletRequest request, HttpServletResponse servletResponse) {
+        NgData<UserVO> ngData = page(ngPager);
+        List<UserVO> userVOS = ngData.getData();
+        List<List<String>> excelDatas = getExcelDatas(userVOS);
+        try {
+            Workbook wb = ExcelUtils.createWorkBook("用户", "用户数据", excelDatas, Arrays.asList(EXCEL_TABLE_HEADS.split("-")));
+            String fileName = "用户数据.xlsx";
+            servletResponse.setHeader("content-Type", "application/msexcel");
+            servletResponse.setCharacterEncoding("UTF-8");
+            OutputStream os = new BufferedOutputStream(servletResponse.getOutputStream());
+            if ("IE".equals(ExcelUtils.getBrowser(request))) {
+                fileName = new String(java.net.URLEncoder.encode(fileName, "UTF-8"));
+                servletResponse.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+            } else {
+                fileName = new String(fileName.getBytes("UTF-8"), "iso-8859-1");
+                servletResponse.setHeader("Content-Disposition", "attachment;filename=" + fileName);
+            }
+            wb.write(os);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new WarnException("数据导出异常!");
+        }
+    }
+
+    /**
+     * 获取Excel的数据
+     *
+     * @param user
+     * @return
+     */
+    private List<List<String>> getExcelDatas(List<UserVO> user) {
+        List<List<String>> excelDatas = new ArrayList<>();
+        user.forEach(item -> {
+            //  "序号-姓名-微信ID-性别-电话-邮箱";
+            List<String> excelData = new ArrayList<>();
+            excelData.add(String.valueOf(user.indexOf(item) + 1));
+            excelData.add(item.getRealName());
+            excelData.add(item.getUsername());
+            excelData.add(item.getSex() == 0 ? "男" : "女");
+            excelData.add(item.getTelphone());
+            excelData.add(item.getEmail());
+            excelDatas.add(excelData);
+        });
+        return excelDatas;
+    }
 }

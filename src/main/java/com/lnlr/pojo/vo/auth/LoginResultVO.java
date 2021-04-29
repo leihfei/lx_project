@@ -17,7 +17,7 @@ public class LoginResultVO {
     /**
      * 登陆对象
      */
-    private UserVO user;
+    private LoginUserVO user;
 
     /**
      * token信息
@@ -38,7 +38,7 @@ public class LoginResultVO {
     public LoginResultVO() {
     }
 
-    public LoginResultVO(UserVO user, String token) {
+    public LoginResultVO(LoginUserVO user, String token) {
         this.user = user;
         this.token = token;
     }

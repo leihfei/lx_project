@@ -4,10 +4,14 @@ package com.lnlr.service;
 import com.lnlr.common.entity.IdEntity;
 import com.lnlr.common.jpa.model.NgData;
 import com.lnlr.common.jpa.model.NgPager;
+import com.lnlr.common.response.Response;
 import com.lnlr.pojo.entity.SysUser;
 import com.lnlr.pojo.param.base.AuthorityParam;
 import com.lnlr.pojo.param.base.CheckPassParam;
+import com.lnlr.pojo.param.base.UserParam;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -130,4 +134,9 @@ public interface UserService {
      */
     List<Map<String, String>> list();
 
+    Response create(UserParam param);
+
+    Response update(UserParam param);
+
+    void exportExcel(NgPager ngPager, HttpServletRequest request, HttpServletResponse servletResponse);
 }
