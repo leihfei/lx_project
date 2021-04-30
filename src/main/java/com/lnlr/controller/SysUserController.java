@@ -13,7 +13,7 @@ import com.lnlr.common.response.FailedResponse;
 import com.lnlr.common.response.ObjectResponse;
 import com.lnlr.common.response.Response;
 import com.lnlr.common.response.SuccessResponse;
-import com.lnlr.pojo.dto.ExcelDownDTO;
+import com.lnlr.pojo.dto.UserExcelDownDTO;
 import com.lnlr.pojo.entity.SysRole;
 import com.lnlr.pojo.entity.SysUser;
 import com.lnlr.pojo.entity.SysUserRole;
@@ -186,7 +186,7 @@ public class SysUserController {
     @ApiOperation(value = "导出数据")
     @ControllerLogAnontation(type = LogConstants.QUERY_STATUS, value = "导出数据", moduleName = "平台管理-学生")
     @ApiImplicitParam(dataTypeClass = NgPager.class, paramType = "query")
-    public void exportExcel(@ModelAttribute ExcelDownDTO dto, HttpServletRequest request, HttpServletResponse servletResponse) {
+    public void exportExcel(@ModelAttribute UserExcelDownDTO dto, HttpServletRequest request, HttpServletResponse servletResponse) {
         NgPager ngPager = new NgPager();
         ngPager.setRows(2000);
         Map<String, NgFilter> filters = ngPager.getFilters();

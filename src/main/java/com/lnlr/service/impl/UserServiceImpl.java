@@ -30,7 +30,6 @@ import com.lnlr.pojo.entity.SysUserRole;
 import com.lnlr.pojo.param.base.AuthorityParam;
 import com.lnlr.pojo.param.base.CheckPassParam;
 import com.lnlr.pojo.param.base.UserParam;
-import com.lnlr.pojo.vo.auth.LoginUserVO;
 import com.lnlr.pojo.vo.auth.UserVO;
 import com.lnlr.service.ModuleServices;
 import com.lnlr.service.UserService;
@@ -143,10 +142,10 @@ public class UserServiceImpl implements UserService {
     @ServiceLogAnonation(type = LogConstants.QUERY_STATUS, value = "通过id查询用户信息", moduleName = "用户管理")
     public UserVO view(String id) {
         SysUser sysUser = userDAO.findById(id).orElse(null);
-        if(sysUser == null){
+        if (sysUser == null) {
             throw new WarnException("用户信息不存在！");
         }
-        UserVO v = CopyUtils.beanCopy(sysUser,new UserVO());
+        UserVO v = CopyUtils.beanCopy(sysUser, new UserVO());
         return v;
     }
 
@@ -428,8 +427,6 @@ public class UserServiceImpl implements UserService {
         user.setPassword(hashPassword.getPassword());
         // 4.盐值
         user.setSalt(hashPassword.getSalt());
-        // 5.状态
-        user.setStatus(0);
         // 6.用户类型
         user.setUserType(USER_TYPE_TEACHER);
         // 8.头像id
@@ -502,7 +499,7 @@ public class UserServiceImpl implements UserService {
             }
             before.setTelphone(telphone);
         }
-
+        before.setStatus(param.getStatus());
         /** 7.邮箱 */
         if (StringUtils.isNotBlank(param.getEmail())) {
             String email = param.getEmail().trim();
@@ -516,11 +513,13 @@ public class UserServiceImpl implements UserService {
         before.setSex(param.getSex());
         before.setUserType(param.getUserType());
     }
+
     /**
      * 学生导入导出的额Excel表头
      */
     private static final String EXCEL_TABLE_HEADS =
             "序号-姓名-微信ID-性别-电话-邮箱";
+
     @Override
     public void exportExcel(NgPager ngPager, HttpServletRequest request, HttpServletResponse servletResponse) {
         NgData<UserVO> ngData = page(ngPager);

@@ -4,6 +4,7 @@ import com.lnlr.common.exception.ParamException;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -107,6 +108,36 @@ public class ExcelUtils {
         return wb;
     }
 
+    /**
+     * 创建表头
+     *
+     * @param wb    workbook
+     * @param sheet sheet
+     */
+    public static void createHeader(Workbook wb, Sheet sheet, String[] headerArr) {
+        //表头
+        Row header = sheet.createRow(0);
+        header.setHeight((short) (28 * 20));
+        CellStyle style = wb.createCellStyle();
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setWrapText(true);
+        Font font = wb.createFont();
+        font.setFontName("宋体");
+        font.setBold(true);
+        font.setColor(HSSFFont.COLOR_NORMAL);
+        font.setFontHeightInPoints((short) 12);
+        style.setFont(font);
+        for (int i = 0; i < headerArr.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(headerArr[i]);
+            cell.setCellStyle(style);
+        }
+    }
 
     /**
      * @param is  文件流

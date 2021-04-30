@@ -6,6 +6,9 @@ import com.lnlr.common.jpa.model.NgPager;
 import com.lnlr.common.response.Response;
 import com.lnlr.pojo.param.MoneyParam;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author leihfei
  * @date 2021-04-30
@@ -18,4 +21,12 @@ public interface MoneyConuntService {
     Response update(MoneyParam param);
 
     Response delete(IdEntity param);
+
+    /**
+     * 导出
+     * @param ngPager
+     * @param request
+     * @param servletResponse
+     */
+    void exportExcel(NgPager ngPager, HttpServletRequest request, HttpServletResponse servletResponse);
 }
