@@ -203,4 +203,12 @@ public class SysUserController {
         userService.exportExcel(ngPager, request, servletResponse);
     }
 
+    @PostMapping(value = "/view")
+    @ApiOperation(value = "查询用户")
+    @ControllerLogAnontation(type = LogConstants.UPDATE_STATUS, value = "更新用户", moduleName = "平台管理-用户")
+    @ApiImplicitParam(dataTypeClass = IdEntity.class, paramType = "query")
+    public Response view(@RequestBody IdEntity param) {
+        return new ObjectResponse<>(userService.view(param.getId()));
+    }
+
 }

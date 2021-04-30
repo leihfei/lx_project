@@ -141,8 +141,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @ServiceLogAnonation(type = LogConstants.QUERY_STATUS, value = "通过id查询用户信息", moduleName = "用户管理")
-    public SysUser view(String id) {
-        return userDAO.findById(id).orElse(null);
+    public UserVO view(String id) {
+        SysUser sysUser = userDAO.findById(id).orElse(null);
+        if(sysUser == null){
+            throw new WarnException("用户信息不存在！");
+        }
+        UserVO v = CopyUtils.beanCopy(sysUser,new UserVO());
+        return v;
     }
 
     /**

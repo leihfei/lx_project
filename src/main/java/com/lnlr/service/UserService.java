@@ -9,6 +9,7 @@ import com.lnlr.pojo.entity.SysUser;
 import com.lnlr.pojo.param.base.AuthorityParam;
 import com.lnlr.pojo.param.base.CheckPassParam;
 import com.lnlr.pojo.param.base.UserParam;
+import com.lnlr.pojo.vo.auth.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,7 +49,7 @@ public interface UserService {
      * @param id
      * @return
      */
-    SysUser view(String id);
+    UserVO view(String id);
 
     /**
      * 分页查询用户数据
